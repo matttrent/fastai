@@ -5,6 +5,10 @@ channels:
 - defaults
 - peterjc123
 dependencies:
+- attrs
+- pluggy
+- py
+- pytest
 - scipy
 - numpy
 - pillow
