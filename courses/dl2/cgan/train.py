@@ -1,8 +1,8 @@
 import time
-from options.train_options import TrainOptions
-from data.data_loader import CreateDataLoader
-from models.models import create_model
-from util.visualizer import Visualizer
+from .options.train_options import TrainOptions
+from .data import CreateDataLoader
+from .models import create_model
+from .util.visualizer import Visualizer
 
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)
