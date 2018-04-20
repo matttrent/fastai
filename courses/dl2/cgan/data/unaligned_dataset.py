@@ -1,4 +1,4 @@
-import os.path
+import os
 from .base_dataset import BaseDataset, get_transform
 from .image_folder import make_dataset
 from PIL import Image
