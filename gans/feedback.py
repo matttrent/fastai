@@ -1,11 +1,11 @@
 import os
 import pathlib
-from .options.feedback_options import FeedbackOptions
-from .data import CreateDataLoader
-from .models import create_model
-from .util.visualizer import Visualizer
-from .util import html
-from .util.util import save_image
+from gans.options.feedback_options import FeedbackOptions
+from gans.data import CreateDataLoader
+from gans.models import create_model
+from gans.util.visualizer import Visualizer
+from gans.util import html
+from gans.util.util import save_image
 
 opt = FeedbackOptions().parse()
 opt.phase = 'feedback'

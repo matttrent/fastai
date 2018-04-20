@@ -1,8 +1,8 @@
 import time
-from .options.train_options import TrainOptions
-from .data import CreateDataLoader
-from .models import create_model
-from .util.visualizer import Visualizer
+from gans.options.train_options import TrainOptions
+from gans.data import CreateDataLoader
+from gans.models import create_model
+from gans.util.visualizer import Visualizer
 
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)

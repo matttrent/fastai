@@ -1,9 +1,9 @@
 import os
-from .options.test_options import TestOptions
-from .data import CreateDataLoader
-from .models import create_model
-from .util.visualizer import Visualizer
-from .util import html
+from gans.options.test_options import TestOptions
+from gans.data import CreateDataLoader
+from gans.models import create_model
+from gans.util.visualizer import Visualizer
+from gans.util import html
 
 opt = TestOptions().parse()
 opt.nThreads = 1   # test code only supports nThreads = 1

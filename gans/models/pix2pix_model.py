@@ -3,8 +3,8 @@ from collections import OrderedDict
 from torch.autograd import Variable
 from ..util import util
 from ..util.image_pool import ImagePool
-from .base_model import BaseModel
-from . import networks
+from ..models.base_model import BaseModel
+from ..models import networks
 
 
 class Pix2PixModel(BaseModel):

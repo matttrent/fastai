@@ -5,7 +5,6 @@ import requests
 from warnings import warn
 from zipfile import ZipFile
 from bs4 import BeautifulSoup
-from os.path import abspath, isdir, join, basename
 
 
 class GetData(object):
@@ -20,7 +19,6 @@ class GetData(object):
             If True, print additional information.
 
     Examples:
-        >>> from util.get_data import GetData
         >>> gd = GetData(technique='cyclegan')
         >>> new_data_path = gd.get(save_path='./datasets')  # options will be displayed.
 
@@ -56,11 +54,11 @@ class GetData(object):
         return options[int(choice)]
 
     def _download_data(self, dataset_url, save_path):
-        if not isdir(save_path):
+        if not os.path.isdir(save_path):
             os.makedirs(save_path)
 
-        base = basename(dataset_url)
-        temp_save_path = join(save_path, base)
+        base = os.path.basename(dataset_url)
+        temp_save_path = os.path.join(save_path, base)
 
         with open(temp_save_path, "wb") as f:
             r = requests.get(dataset_url)
@@ -102,9 +100,9 @@ class GetData(object):
         else:
             selected_dataset = dataset
 
-        save_path_full = join(save_path, selected_dataset.split('.')[0])
+        save_path_full = os.path.join(save_path, selected_dataset.split('.')[0])
 
-        if isdir(save_path_full):
+        if os.path.isdir(save_path_full):
             warn("\n'{0}' already exists. Voiding Download.".format(
                 save_path_full))
         else:
@@ -112,4 +110,4 @@ class GetData(object):
             url = "{0}/{1}".format(self.url, selected_dataset)
             self._download_data(url, save_path=save_path)
 
-        return abspath(save_path_full)
+        return os.path.abspath(save_path_full)
