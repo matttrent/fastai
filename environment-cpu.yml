@@ -94,7 +94,7 @@ dependencies:
 - widgetsnbextension
 - xz
 - zeromq
-- pytorch>=0.2.0
+- pytorch<0.4
 - bcolz
 - prompt_toolkit
 - pytest
@@ -109,9 +109,7 @@ dependencies:
   - feather-format
   - jupyter_contrib_nbextensions
   - plotnine
-  - awscli
   - kaggle-cli
   - ipywidgets
   - jupyter_contrib_nbextensions
-  - git+https://github.com/SauceCat/PDPbox.git
-  - fire
+    # - git+https://github.com/SauceCat/PDPbox.git
