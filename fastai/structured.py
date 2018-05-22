@@ -1,10 +1,20 @@
-from .imports import *
+from concurrent.futures import ProcessPoolExecutor
+
+import pandas as pd
+import IPython
+import graphviz
+import matplotlib.pyplot as plt
+import re
+import sklearn
 
 from sklearn_pandas import DataFrameMapper
 from sklearn.preprocessing import LabelEncoder, Imputer, StandardScaler
 from pandas.api.types import is_string_dtype, is_numeric_dtype
 from sklearn.ensemble import forest
 from sklearn.tree import export_graphviz
+
+from .core import *
+
 
 
 def set_plot_sizes(sml, med, big):

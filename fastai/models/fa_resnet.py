@@ -1,7 +1,8 @@
-import torch.nn as nn
 import math
+import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-from ..layers import *
+
+from ..layers import Flatten
 
 
 model_urls = {
@@ -210,7 +211,7 @@ class ResNet(nn.Module):
     def forward(self, x): return self.features(x)
 
 def load(model, pre, name):
-    if pretrained: model.load_state_dict(model_zoo.load_url(model_urls[name]))
+    if pre: model.load_state_dict(model_zoo.load_url(model_urls[name]))
     return model
 
 def fa_resnet18(pretrained=False, **kwargs):  return load(ResNet(BasicBlock, [2, 2, 2, 2], **kwargs), pretrained, 'resnet18')

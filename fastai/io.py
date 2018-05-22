@@ -1,9 +1,8 @@
-from .imports import *
-from .torch_imports import *
-
-import gzip
 from urllib.request import urlretrieve
 from tqdm import tqdm
+
+from .core import *
+
 
 class TqdmUpTo(tqdm):
     def update_to(self, b=1, bsize=1, tsize=None):

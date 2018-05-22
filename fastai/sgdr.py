@@ -1,7 +1,15 @@
-from .imports import *
-from .layer_optimizer import *
+import os
+import math
+import numpy as np
+import time
+import matplotlib.pyplot as plt
+
+from abc import abstractmethod
+from collections import Iterable
+from torch import optim
 from enum import IntEnum
-import copy
+
+from .notebook import in_ipynb
 
 
 class Callback:

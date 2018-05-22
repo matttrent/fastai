@@ -1,9 +1,12 @@
-from .imports import *
-from .torch_imports import *
+import threading
+from collections import Iterable, OrderedDict
+
 from .core import *
-from .layer_optimizer import *
-from .swa import *
-from .fp16 import *
+from .fp16 import copy_model_to_fp32, update_fp32_grads, copy_fp32_to_model
+from .layer_optimizer import LayerOptimizer
+from .notebook import tnrange, tqdm
+from .swa import fix_batchnorm
+
 
 IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
 

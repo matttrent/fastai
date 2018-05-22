@@ -1,8 +1,9 @@
-import torch, queue
+import collections
+
+from concurrent.futures import ThreadPoolExecutor
 from torch.utils.data.sampler import SequentialSampler, RandomSampler, BatchSampler
-from .imports import *
+
 from .core import *
-import collections,sys,traceback,threading
 
 string_classes = (str, bytes)
 

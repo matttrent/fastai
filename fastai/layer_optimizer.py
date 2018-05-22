@@ -1,5 +1,5 @@
-from .imports import *
-from .torch_imports import *
+from collections import Iterable
+
 from .core import *
 
 def opt_params(parm, lr, wd):
