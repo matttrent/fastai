@@ -1,7 +1,11 @@
 from .core import *
-from .layers import *
-from .learner import *
-from .initializers import *
+from .dataset import ImageClassifierData
+from .initializers import apply_init
+from .layers import AdaptiveConcatPool2d
+from .learner import Learner
+from .metrics import accuracy_thresh, accuracy
+from .model import cut_model, num_features, predict_to_bcolz
+
 
 model_meta = {
     resnet18:[8,6], resnet34:[8,6], resnet50:[8,6], resnet101:[8,6], resnet152:[8,6],
