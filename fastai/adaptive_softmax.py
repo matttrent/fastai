@@ -1,4 +1,5 @@
-from .lm_rnn import *
+from .core import *
+
 
 class AdaptiveSoftmax(nn.Module):
     def __init__(self, input_size, cutoff):
@@ -77,4 +78,3 @@ class AdaptiveLoss(nn.Module):
                 output += criterion(input[i], Variable(target[i]))
         output /= batch_size
         return output
-

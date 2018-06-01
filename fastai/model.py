@@ -8,7 +8,7 @@ from .notebook import tnrange, tqdm
 from .swa import fix_batchnorm
 
 
-IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+IS_TORCH_04 = (torch.__version__ == 'master') or (LooseVersion(torch.__version__) >= LooseVersion('0.4'))
 
 def cut_model(m, cut):
     return list(m.children())[:cut] if cut else [m]
@@ -53,7 +53,7 @@ class Stepper():
         output = self.m(*xs)
         if isinstance(output,tuple): output,*xtra = output
         if self.fp16: self.m.zero_grad()
-        else: self.opt.zero_grad() 
+        else: self.opt.zero_grad()
         loss = raw_loss = self.crit(output, y)
         if self.loss_scale != 1: assert(self.fp16); loss = loss*self.loss_scale
         if self.reg_fn: loss = self.reg_fn(output, xtra, raw_loss)
@@ -64,14 +64,14 @@ class Stepper():
         if self.clip:   # Gradient clipping
             if IS_TORCH_04: nn.utils.clip_grad_norm_(trainable_params_(self.m), self.clip)
             else: nn.utils.clip_grad_norm(trainable_params_(self.m), self.clip)
-        if 'wd' in self.opt.param_groups and self.opt.param_groups['wd'] != 0: 
+        if 'wd' in self.opt.param_groups and self.opt.param_groups['wd'] != 0:
             #Weight decay out of the loss. After the gradient computation but before the step.
             for group in self.opt.param_groups:
                 lr, wd = group['lr'], group['wd']
                 for p in group['params']:
                     if p.grad is not None: p.data = p.data.add(-wd * lr, p.data)
         self.opt.step()
-        if self.fp16: 
+        if self.fp16:
             copy_fp32_to_model(self.m, self.fp32_params)
             torch.cuda.synchronize()
         return torch_item(raw_loss.data)
@@ -96,7 +96,7 @@ def fit(model, data, n_epochs, opt, crit, metrics=None, callbacks=None, stepper=
        model (model): any pytorch module
            net = to_gpu(net)
        data (ModelData): see ModelData class and subclasses (can be a list)
-       opts: an optimizer. Example: optim.Adam. 
+       opts: an optimizer. Example: optim.Adam.
        If n_epochs is a list, it needs to be the layer_optimizer to get the optimizer as it changes.
        n_epochs(int or list): number of epochs (or list of number of epochs)
        crit: loss function to optimize. Example: F.cross_entropy
@@ -289,4 +289,3 @@ def model_summary(m, input_size):
 
     for h in hooks: h.remove()
     return summary
-

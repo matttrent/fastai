@@ -1,4 +1,5 @@
 from .core import *
+from .torch_imports import *
 
 
 class AdaptiveConcatPool2d(nn.Module):
@@ -16,4 +17,3 @@ class Lambda(nn.Module):
 class Flatten(nn.Module):
     def __init__(self): super().__init__()
     def forward(self, x): return x.view(x.size(0), -1)
-

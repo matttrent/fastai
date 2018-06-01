@@ -3,7 +3,7 @@ import pickle
 from distutils.version import LooseVersion
 from itertools import chain
 
-import bcolz
+# import bcolz
 import collections
 import math
 
@@ -30,7 +30,7 @@ def A(*a):
 
 def T(a, half=False, cuda=True):
     """
-    Convert numpy array into a pytorch tensor. 
+    Convert numpy array into a pytorch tensor.
     if Cuda is available and USE_GPU=ture, store resulting tensor in GPU.
     """
     if not torch.is_tensor(a):
@@ -56,7 +56,7 @@ def V(x, requires_grad=False, volatile=False):
     '''creates a single or a list of pytorch tensors, depending on input x. '''
     return map_over(x, lambda o: V_(o, requires_grad, volatile))
 
-def VV_(x): 
+def VV_(x):
     '''creates a volatile tensor, which does not require gradients. '''
     return create_variable(x, True)
 
@@ -72,7 +72,7 @@ def to_np(v):
     if isinstance(v, torch.cuda.HalfTensor): v=v.float()
     return v.cpu().numpy()
 
-IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+IS_TORCH_04 = (torch.__version__ == 'master') or (LooseVersion(torch.__version__) >= LooseVersion('0.4'))
 USE_GPU = torch.cuda.is_available()
 def to_gpu(x, *args, **kwargs):
     '''puts pytorch variable to gpu, if cuda is avaialble and USE_GPU is set to true. '''
@@ -117,7 +117,7 @@ def SGD_Momentum(momentum):
 
 def one_hot(a,c): return np.eye(c)[a]
 
-def partition(a, sz): 
+def partition(a, sz):
     """splits iterables a in equal parts of size sz"""
     return [a[i:i+sz] for i in range(0, len(a), sz)]
 
@@ -152,19 +152,19 @@ class SimpleNet(nn.Module):
         return F.log_softmax(l_x, dim=-1)
 
 
-def save(fn, a): 
-    """Utility function that savess model, function, etc as pickle"""    
+def save(fn, a):
+    """Utility function that savess model, function, etc as pickle"""
     pickle.dump(a, open(fn,'wb'))
-def load(fn): 
+def load(fn):
     """Utility function that loads model, function, etc as pickle"""
     return pickle.load(open(fn,'rb'))
 def load2(fn):
     """Utility funciton allowing model piclking across Python2 and Python3"""
     return pickle.load(open(fn,'rb'), encoding='iso-8859-1')
 
-def load_array(fname): 
+def load_array(fname):
     '''
-    Load array using bcolz, which is based on numpy, for fast array saving and loading operations. 
+    Load array using bcolz, which is based on numpy, for fast array saving and loading operations.
     https://github.com/Blosc/bcolz
     '''
     return bcolz.open(fname)[:]
