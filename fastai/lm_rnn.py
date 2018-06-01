@@ -1,7 +1,7 @@
 from .core import *
 from .rnn_reg import LockedDropout,WeightDrop,EmbeddingDropout
 
-IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+IS_TORCH_04 = (torch.__version__ == 'master') or (LooseVersion(torch.__version__) >= LooseVersion('0.4'))
 
 def seq2seq_reg(output, xtra, loss, alpha=0, beta=0):
     hs,dropped_hs = xtra
@@ -237,4 +237,3 @@ def get_rnn_classifer(bptt, max_seq, n_class, n_tok, emb_sz, n_hid, n_layers, pa
     rnn_enc = MultiBatchRNN(bptt, max_seq, n_tok, emb_sz, n_hid, n_layers, pad_token=pad_token, bidir=bidir,
                       dropouth=dropouth, dropouti=dropouti, dropoute=dropoute, wdrop=wdrop, qrnn=qrnn)
     return SequentialRNN(rnn_enc, PoolingLinearClassifier(layers, drops))
-

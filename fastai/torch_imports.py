@@ -23,7 +23,7 @@ from .models.fa_resnet import *
 import warnings
 warnings.filterwarnings('ignore', message='Implicit dimension choice', category=UserWarning)
 
-IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+IS_TORCH_04 = (torch.__version__ == 'master') or (LooseVersion(torch.__version__) >= LooseVersion('0.4'))
 if IS_TORCH_04:
     from torch.nn.init import kaiming_uniform_ as kaiming_uniform
     from torch.nn.init import kaiming_normal_ as kaiming_normal
@@ -103,4 +103,3 @@ def vgg16(pre): return children(vgg16_bn(pre))[0]
 @_fastai_model('Vgg-19 with batch norm added', 'Very Deep Convolutional Networks for Large-Scale Image Recognition',
                'https://arxiv.org/pdf/1409.1556.pdf')
 def vgg19(pre): return children(vgg19_bn(pre))[0]
-

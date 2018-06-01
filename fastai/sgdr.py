@@ -11,6 +11,7 @@ from torch import optim
 from enum import IntEnum
 from timeit import default_timer as timer
 
+from .core import *
 from .notebook import in_ipynb
 
 

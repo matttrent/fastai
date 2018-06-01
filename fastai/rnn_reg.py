@@ -2,7 +2,7 @@ import torch.nn.functional as F
 
 from .core import *
 
-IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+IS_TORCH_04 = (torch.__version__ == 'master') or (LooseVersion(torch.__version__) >= LooseVersion('0.4'))
 
 def dropout_mask(x, sz, dropout):
     """ Applies a dropout mask whose size is determined by passed argument 'sz'.
@@ -175,7 +175,7 @@ class EmbeddingDropout(nn.Module):
         padding_idx = self.embed.padding_idx
         if padding_idx is None: padding_idx = -1
 
-        
+
         if IS_TORCH_04:
             X = F.embedding(words,
                 masked_embed_weight, padding_idx, self.embed.max_norm,

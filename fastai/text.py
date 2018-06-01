@@ -1,4 +1,5 @@
 import re
+import string
 import spacy
 
 from collections import Counter
@@ -223,4 +224,3 @@ class TextModel(BasicModel):
     def get_layer_groups(self):
         m = self.model[0]
         return [(m.encoder, m.dropouti), *zip(m.rnns, m.dropouths), (self.model[1])]
-
