@@ -2,19 +2,21 @@ import os
 import math
 import numpy as np
 import time
+import copy
 import matplotlib.pyplot as plt
 
 from abc import abstractmethod
 from collections import Iterable
 from torch import optim
 from enum import IntEnum
+from timeit import default_timer as timer
 
 from .notebook import in_ipynb
 
 
 class Callback:
     '''
-    An abstract class that all callback(e.g., LossRecorder) classes extends from. 
+    An abstract class that all callback(e.g., LossRecorder) classes extends from.
     Must be extended before usage.
     '''
     def on_train_begin(self): pass
@@ -26,7 +28,7 @@ class Callback:
     def on_train_end(self): pass
 
 # Useful for maintaining status of a long-running job.
-# 
+#
 # Usage:
 # learn.fit(0.01, 1, callbacks = [LoggingCallback(save_path="/tmp/log")])
 class LoggingCallback(Callback):
@@ -61,11 +63,11 @@ class LoggingCallback(Callback):
         self.f.close()
     def log(self, string):
         self.f.write(time.strftime("%Y-%m-%dT%H:%M:%S")+"\t"+string+"\n")
-        
+
 class LossRecorder(Callback):
     '''
-    Saves and displays loss functions and other metrics. 
-    Default sched when none is specified in a learner. 
+    Saves and displays loss functions and other metrics.
+    Default sched when none is specified in a learner.
     '''
     def __init__(self, layer_opt, save_path='', record_mom=False, metrics=[]):
         super().__init__()
@@ -74,7 +76,8 @@ class LossRecorder(Callback):
         self.save_path, self.record_mom, self.metrics = save_path, record_mom, metrics
 
     def on_train_begin(self):
-        self.losses,self.lrs,self.iterations = [],[],[]
+        self.losses,self.lrs,self.iterations,self.epochs,self.times = [],[],[],[],[]
+        self.start_at = timer()
         self.val_losses, self.rec_metrics = [], []
         if self.record_mom:
             self.momentums = []
@@ -83,6 +86,8 @@ class LossRecorder(Callback):
 
     def on_epoch_end(self, metrics):
         self.epoch += 1
+        self.epochs.append(self.iteration)
+        self.times.append(timer() - self.start_at)
         self.save_metrics(metrics)
 
     def on_batch_end(self, loss):
@@ -96,14 +101,14 @@ class LossRecorder(Callback):
         if self.record_mom: self.momentums.append(self.layer_opt.mom)
 
     def save_metrics(self,vals):
-        self.val_losses.append(vals[0][0] if isinstance(vals[0], Iterable) else vals[0])
+        self.val_losses.append(delistify(vals[0]))
         if len(vals) > 2: self.rec_metrics.append(vals[1:])
         elif len(vals) == 2: self.rec_metrics.append(vals[1])
 
     def plot_loss(self, n_skip=10, n_skip_end=5):
         '''
-        plots loss function as function of iterations. 
-        When used in Jupyternotebook, plot will be displayed in notebook. Else, plot will be displayed in console and both plot and loss are saved in save_path. 
+        plots loss function as function of iterations.
+        When used in Jupyternotebook, plot will be displayed in notebook. Else, plot will be displayed in console and both plot and loss are saved in save_path.
         '''
         if not in_ipynb(): plt.switch_backend('agg')
         plt.plot(self.iterations[n_skip:-n_skip_end], self.losses[n_skip:-n_skip_end])
@@ -121,7 +126,7 @@ class LossRecorder(Callback):
             axs[0].set_ylabel('learning rate')
             axs[1].set_ylabel('momentum')
             axs[0].plot(self.iterations,self.lrs)
-            axs[1].plot(self.iterations,self.momentums)   
+            axs[1].plot(self.iterations,self.momentums)
         else:
             plt.xlabel("iterations")
             plt.ylabel("learning rate")
@@ -133,8 +138,8 @@ class LossRecorder(Callback):
 class LR_Updater(LossRecorder):
     '''
     Abstract class where all Learning Rate updaters inherit from. (e.g., CirularLR)
-    Calculates and updates new learning rate and momentum at the end of each batch. 
-    Have to be extended. 
+    Calculates and updates new learning rate and momentum at the end of each batch.
+    Have to be extended.
     '''
     def on_train_begin(self):
         super().on_train_begin()
@@ -152,22 +157,22 @@ class LR_Updater(LossRecorder):
     def update_lr(self):
         new_lrs = self.calc_lr(self.init_lrs)
         self.layer_opt.set_lrs(new_lrs)
-    
+
     def update_mom(self):
         new_mom = self.calc_mom()
         self.layer_opt.set_mom(new_mom)
 
     @abstractmethod
     def calc_lr(self, init_lrs): raise NotImplementedError
-    
+
     @abstractmethod
     def calc_mom(self): raise NotImplementedError
 
 
 class LR_Finder(LR_Updater):
     '''
-    Helps you find an optimal learning rate for a model, as per suggetion of 2015 CLR paper. 
-    Learning rate is increased in linear or log scale, depending on user input, and the result of the loss funciton is retained and can be plotted later. 
+    Helps you find an optimal learning rate for a model, as per suggetion of 2015 CLR paper.
+    Learning rate is increased in linear or log scale, depending on user input, and the result of the loss funciton is retained and can be plotted later.
     '''
     def __init__(self, layer_opt, nb, end_lr=10, linear=False, metrics = []):
         self.linear, self.stop_dv = linear, True
@@ -192,7 +197,7 @@ class LR_Finder(LR_Updater):
 
     def plot(self, n_skip=10, n_skip_end=5):
         '''
-        Plots the loss function with respect to learning rate, in log scale. 
+        Plots the loss function with respect to learning rate, in log scale.
         '''
         plt.ylabel("loss")
         plt.xlabel("learning rate (log scale)")
@@ -222,7 +227,7 @@ class LR_Finder2(LR_Finder):
         for i in range(0,n_plots): axs[i].set_xlabel('learning rate')
         axs[0].set_ylabel('training loss')
         axs[1].set_ylabel('validation loss')
-        for i,m in enumerate(self.metrics): 
+        for i,m in enumerate(self.metrics):
             axs[i+2].set_ylabel(m.__name__)
             if len(self.metrics) == 1:
                 values = self.rec_metrics
@@ -261,8 +266,8 @@ class CosAnneal(LR_Updater):
 
 class CircularLR(LR_Updater):
     '''
-    An learning rate updater that implements the CirularLearningRate (CLR) scheme. 
-    Learning rate is increased then decreased linearly. 
+    An learning rate updater that implements the CirularLearningRate (CLR) scheme.
+    Learning rate is increased then decreased linearly.
     '''
     def __init__(self, layer_opt, nb, div=4, cut_div=8, on_cycle_end=None, momentums=None):
         self.nb,self.div,self.cut_div,self.on_cycle_end = nb,div,cut_div,on_cycle_end
@@ -286,7 +291,7 @@ class CircularLR(LR_Updater):
             if self.on_cycle_end: self.on_cycle_end(self, self.cycle_count)
             self.cycle_count += 1
         return res
-    
+
     def calc_mom(self):
         cut_pt = self.nb//self.cut_div
         if self.cycle_iter>cut_pt:
@@ -337,25 +342,25 @@ class CircularLR_beta(LR_Updater):
 
 
 class SaveBestModel(LossRecorder):
-    
+
     """ Save weights of the best model based during training.
         If metrics are provided, the first metric in the list is used to
-        find the best model. 
+        find the best model.
         If no metrics are provided, the loss is used.
-        
+
         Args:
             model: the fastai model
             lr: indicate to use test images; otherwise use validation images
             name: the name of filename of the weights without '.h5'
-        
+
         Usage:
             Briefly, you have your model 'learn' variable and call fit.
             >>> learn.fit(lr, 2, cycle_len=2, cycle_mult=1, best_save_name='mybestmodel')
             ....
             >>> learn.load('mybestmodel')
-            
+
             For more details see http://forums.fast.ai/t/a-code-snippet-to-save-the-best-model-during-training/12066
- 
+
     """
     def __init__(self, model, layer_opt, metrics, name='best_model'):
         super().__init__(layer_opt)
@@ -364,13 +369,13 @@ class SaveBestModel(LossRecorder):
         self.best_loss = None
         self.best_acc = None
         self.save_method = self.save_when_only_loss if metrics==None else self.save_when_acc
-        
+
     def save_when_only_loss(self, metrics):
         loss = metrics[0]
         if self.best_loss == None or loss < self.best_loss:
             self.best_loss = loss
             self.model.save(f'{self.name}')
-    
+
     def save_when_acc(self, metrics):
         loss, acc = metrics[0], metrics[1]
         if self.best_acc == None or acc > self.best_acc:
@@ -380,7 +385,7 @@ class SaveBestModel(LossRecorder):
         elif acc == self.best_acc and  loss < self.best_loss:
             self.best_loss = loss
             self.model.save(f'{self.name}')
-        
+
     def on_epoch_end(self, metrics):
         super().on_epoch_end(metrics)
         self.save_method(metrics)
@@ -463,7 +468,7 @@ class DecayScheduler():
         self.dec_type, self.nb, self.start_val, self.end_val, self.extra = dec_type, num_it, start_val, end_val, extra
         self.it = 0
         if self.end_val is None and not (self.dec_type in [1,4]): self.end_val = 0
-    
+
     def next_val(self):
         self.it += 1
         if self.dec_type == DecayType.NO:
@@ -479,11 +484,11 @@ class DecayScheduler():
             return self.start_val * (ratio **  (self.it/self.nb))
         elif self.dec_type == DecayType.POLYNOMIAL:
             return self.end_val + (self.start_val-self.end_val) * (1 - self.it/self.nb)**self.extra
-        
+
 
 class TrainingPhase():
     '''
-    Object with training information for each phase, when multiple phases are involved during training.  
+    Object with training information for each phase, when multiple phases are involved during training.
     Used in fit_opt_sched in learner.py
     '''
     def __init__(self, epochs=1, opt_fn=optim.SGD, lr=1e-2, lr_decay=DecayType.NO, momentum=0.9,
@@ -522,16 +527,14 @@ class TrainingPhase():
         self.layer_opt.set_mom(start_mom)
         if self.beta is not None: self.layer_opt.set_beta(self.beta)
         if self.wds is not None:
-            if not isinstance(self.wds, Iterable): self.wds=[self.wds]
-            if len(self.wds)==1: self.wds=self.wds*len(self.layer_opt.layer_groups) 
             if self.wd_loss: self.layer_opt.set_wds(self.wds)
             else: self.layer_opt.set_wds_out(self.wds)
-    
+
     def update(self):
         new_lr, new_mom = self.lr_sched.next_val(), self.mom_sched.next_val()
         self.layer_opt.set_lrs(new_lr)
         self.layer_opt.set_mom(new_mom)
-    
+
 
 class OptimScheduler(LossRecorder):
     '''Learning rate Scheduler for training involving multiple phases.'''
@@ -551,7 +554,7 @@ class OptimScheduler(LossRecorder):
         if (loss<self.best and self.iteration>10): self.best=loss
         super().on_batch_end(metrics)
         self.phases[self.phase].update()
-    
+
     def on_phase_begin(self):
         self.phases[self.phase].phase_begin(self.layer_opt, self.nb_batches[self.phase])
 
@@ -574,7 +577,7 @@ class OptimScheduler(LossRecorder):
         if show_moms:
             axs[1].set_ylabel('momentum')
             axs[1].plot(self.iterations,self.momentums)
-        if show_text:   
+        if show_text:
             for i, phase in enumerate(self.phases):
                 text = phase.opt_fn.__name__
                 if phase.wds is not None: text+='\nwds='+str(phase.wds)
@@ -582,10 +585,10 @@ class OptimScheduler(LossRecorder):
                 for k in range(np_plts):
                     if i < len(self.phases)-1:
                         draw_line(axs[k], phase_limits[i+1])
-                    draw_text(axs[k], (phase_limits[i]+phase_limits[i+1])/2, text) 
+                    draw_text(axs[k], (phase_limits[i]+phase_limits[i+1])/2, text)
         if not in_ipynb():
             plt.savefig(os.path.join(self.save_path, 'lr_plot.png'))
-    
+
     def plot(self, n_skip=10, n_skip_end=5, linear=None):
         if linear is None: linear = self.phases[-1].lr_decay == DecayType.LINEAR
         plt.ylabel("loss")
